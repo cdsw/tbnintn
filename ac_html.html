@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var power = "OFF"; 		//Get power info from hardware
+var temp = 0;			//Get temperature info from hardware
+var setTemp = 16;			 	//Initial AC set temperature
+var curr = 0;			 	//Get current info from hardware
+
+//==================================================================================================
+function dc(t, st){
+    var dif = Math.abs(t - st);
+	return 3 + (Math.pow(dif, 2) - dif * 5 + 16) / 100 + Math.random() * 0.03;
+}
+//==================================================================================================
+
+function togglePower() {
+	///////////check realtime status first
+	///////////pause until all get
+	if (power == "OFF") {
+		document.getElementById("spanp").innerHTML="ON";
+		document.getElementById("switc").innerHTML="Turn off";
+		power = "ON";
+		document.getElementById("spant").innerHTML=setTemp;
+		document.getElementById("spanc").innerHTML=dc(temp, setTemp).toFixed(2);
+	} else {
+		document.getElementById("spanp").innerHTML="OFF";
+		document.getElementById("switc").innerHTML="Turn on";
+		power = "OFF";
+		document.getElementById("spant").innerHTML="--";
+		document.getElementById("spanc").innerHTML="--";
+	}
+}
+
+function upsetTemp() {
+	if (power == "ON" && setTemp < 32){
+		setTemp += 1;
+		document.getElementById("spant").innerHTML=setTemp; //replace with realtime setTemp
+		document.getElementById("spanc").innerHTML=dc(temp, setTemp).toFixed(2); //replace with realtime setTemp
+	}
+}
+
+function dnsetTemp() {
+	if (power == "ON" && setTemp > 16){
+		setTemp -= 1;
+		document.getElementById("spant").innerHTML=setTemp; //replace with realtime setTemp
+		document.getElementById("spanc").innerHTML=dc(temp, setTemp).toFixed(2); //replace with realtime setTemp
+	}
+}
+</script>
+</head>
+<body>
+<p><strong>STATUS</strong></p>
+<p id="currt">Current temperature: <strong><span id="spanst"></span></strong> deg C</p>
+<p id="currc">Current current: <strong><span id="spanc"></span></strong> A</p>
+<p id="currp">Power: <strong><span id="spanp"></span></strong></p>
+<p><strong>PANEL</strong></p>
+<p>POWER OFF/ON	 <button id="switc" onclick="togglePower()"></button></p>
+<p>SET TEMPERATURE	 <button id="uptmp" onclick="upsetTemp()">+1</button>
+<button id="dntmp" onclick="dnsetTemp()">-1</button>	
+Target temperature: <strong><span id="spant"></span></strong> deg C</p>
+
+<script>
+	if (power == "ON"){
+		document.getElementById("spant").innerHTML=setTemp;
+		document.getElementById("spanc").innerHTML=dc(temp, setTemp).toFixed(2); 
+	} else {
+		document.getElementById("spant").innerHTML="--";
+		document.getElementById("spanc").innerHTML="--"; 
+	}
+
+//==================================================================================================
+temp = Math.random() * 30 + 8;
+curr = dc(temp, setTemp);
+
+function dt(){
+	if (power == "ON") {
+		var dif = temp - setTemp;
+		var bias = Math.random()*0.2-0.1;
+		if (dif < 0){
+			temp += Math.random()/1.1/(25 + dif);
+		} else {
+			temp -= Math.random()/1.1/(25 - dif);
+		}
+		curr = dc(temp, setTemp);
+		document.getElementById("spanst").innerHTML=(temp + bias).toFixed(2);
+		document.getElementById("spanc").innerHTML=curr.toFixed(2);
+	}
+}
+
+setInterval(dt, 300);
+//==================================================================================================
+
+document.getElementById("spanp").innerHTML=power;
+document.getElementById("spanst").innerHTML=temp.toFixed(2);
+
+if (power == "OFF"){
+	document.getElementById("switc").innerHTML="Turn on";
+} else {
+	document.getElementById("switc").innerHTML="Turn off";
+}
+
+</script>
+
+</body>
+</html>

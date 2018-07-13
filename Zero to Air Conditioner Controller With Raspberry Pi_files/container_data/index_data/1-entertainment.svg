@@ -1,0 +1,17 @@
+<svg id="entertainment" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 30 30">
+  <defs>
+    <mask id="mask" x="0" y="1.39" width="30" height="27.23" maskUnits="userSpaceOnUse">
+      <g id="mask-2">
+        <path id="path-1" d="M27.23,1.41a2.73,2.73,0,0,1,2.72,2.72v16.3a2.73,2.73,0,0,1-2.72,2.72H17.72l2.72,4.08v1.36H9.57V27.23l2.72-4.08H2.77A2.73,2.73,0,0,1,.05,20.43V4.13A2.73,2.73,0,0,1,2.77,1.41ZM2.77,17.72H27.23V4.13H2.77Z" fill="#fff"/>
+      </g>
+    </mask>
+  </defs>
+  <title>01-entertainment</title>
+  <g id="Icons">
+    <g id="apple-computer_1x" data-name="apple-computer@1x">
+      <g mask="url(#mask)">
+        <polygon id="Fill-1" points="0 28.61 30 28.61 30 1.39 0 1.39 0 28.61" fill="#fff"/>
+      </g>
+    </g>
+  </g>
+</svg>

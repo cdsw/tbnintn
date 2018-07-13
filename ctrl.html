@@ -1,0 +1,327 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<!-- Latest compiled and minified Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Include JQuery library from CDN -->
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous">
+	</script>
+
+	<!-- Include Paho JavaScript MQTT Client from CDN -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+
+</head>
+<body>
+	<hr>
+	<div>
+	<table>
+	<tr>
+		<td>
+			<label class="col-sm-2">URL: </label>
+		</td>
+		<td>
+			<span id="url_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">CID: </label>
+		</td>
+		<td>
+			<span id="cid_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">Topic: </label>
+		</td>
+		<td>
+			<span id="top_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">Power: </label>
+		</td>
+		<td>
+			<span id="pow_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">Current: </label>
+		</td>
+		<td>
+			<span id="cur_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">Temperature: </label>
+		</td>
+		<td>
+			<span id="tem_f"></span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<label class="col-sm-2">Set Temperature: </label>
+		</td>
+		<td>
+			<span id="tst_f"></span>
+		</td>
+	</tr>
+	</table>
+	</div>
+	<hr>
+	<span id="conn">Not connected.</span>
+	<hr>
+	<form class="form-horizontal">
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="mqttmsg">Message:</label>
+			<div class="col-sm-6">
+				<input type="text" class="form-control" id="mqttmsg">
+			</div>
+			<div class="col-sm-4">
+				<button type="button" class="btn btn-primary col-sm-4" onclick="publish_msg();">Publish</button>
+				<button type="button" class="btn btn-primary col-sm-4" onclick="toggle_power();">Power</button>
+				<button type="button" class="btn btn-primary col-sm-4" onclick="temp_up();">Temp Up</button>
+				<button type="button" class="btn btn-primary col-sm-4" onclick="temp_down();">Temp Down</button>
+				<button type="button" class="btn btn-primary col-sm-4" onclick="read_sensor();">Read Sensor</button>
+			</div>
+		</div>
+	</form>
+	<hr>
+	<form class="form-horizontal">
+		<div class="form-group">
+			<label class="col-sm-2 control-label" for="console_">Console:</label>
+			<div class="col-sm-9">
+				<textarea type="textarea" class="form-control" rows="12" cols="100" id="console_"></textarea>
+			</div>
+		</div>
+	</form>
+	<span id="diburgarh"></span>	<!--debugger-->
+	<script>
+		//Initialization	
+		var broker_url = "ws://broker.hivemq.com:8000/mqtt"; //broker addr
+		var mqtt_client_id = "135489785784"; //random 12-d client number
+		var mqtt_topic = "tigaresiiot"; //temporary topic name
+		var power = false; //check whether power is on
+		var temperature = 0; //real variable from sensor
+		var current = 0; //real current from sensor
+		var setTemperature = 18; //temperature setter
+		var bufferArray; //buffer array for getting the message
+		var simul = 0; //for simulation purposes
+		var connected = false; //connectivity checker
+		var unresponded = 0; //number of missing responses
+
+		//Display info
+		document.getElementById("url_f").innerHTML = broker_url;
+		document.getElementById("cid_f").innerHTML = mqtt_client_id;
+		document.getElementById("top_f").innerHTML = mqtt_topic;
+
+		//Connect
+		var mqtt_cli = new Paho.MQTT.Client(broker_url, mqtt_client_id);
+
+		//Bind events
+		mqtt_cli.onConnectionLost = onConnectionLost;
+		mqtt_cli.onMessageArrived = onMessageArrived;
+		mqtt_cli.connect({onSuccess:onConnect});
+
+		//Set timer for 
+		var timer = setInterval(check_response, 5000);
+
+		//Publish message (tester)
+		function publish_msg() 
+		{
+			if (connected == true) //only if the connection is up
+			{
+				message = new Paho.MQTT.Message("*" + document.getElementById("mqttmsg").value);
+				message.destinationName = mqtt_topic;
+				mqtt_cli.send(message);
+				send_console(document.getElementById("mqttmsg").value);
+			}
+		}
+
+		//Publish message from buttons
+		function publish(txt)
+		{
+				message = new Paho.MQTT.Message(txt);
+				message.destinationName = mqtt_topic;
+				mqtt_cli.send(message);
+				unresponded += 1;
+				clearInterval(timer); //clear timer interval
+				timer = setInterval(check_response, 5000); //remake timer
+		}
+
+		//Button functionality
+		function temp_up() 
+		{
+			if (setTemperature < 32 && power == true && connected == true)
+			{
+				publish("*u" + (setTemperature + 1));
+				setTemperature += 1;
+				send_console("setTemp >" + setTemperature);
+				document.getElementById("tst_f").innerHTML = setTemperature + "°C";
+			}
+		}
+
+		function temp_down() 
+		{
+			if (setTemperature > 16 && power == true && connected == true)
+			{
+				publish("*d" + (setTemperature - 1));
+				setTemperature -= 1;
+				send_console("setTemp >" + setTemperature);
+				document.getElementById("tst_f").innerHTML = setTemperature + "°C";	
+			}
+		}
+
+		function read_sensor() //obtain sensor reading
+		{
+			if (connected == true) 
+			{
+				if (power == true)
+				{
+					publish("*r1" + setTemperature);		
+				} 
+				else if (power == false)
+				{
+					publish("*r0" + setTemperature);					
+				}
+			}
+		}
+
+		function toggle_power() 
+		{
+			if (connected == true)
+			{
+				if (power == true)
+				{
+					publish("*0" + setTemperature.toString());
+					/////simulation BEGIN
+					if(simul == 1)
+					{
+						document.getElementById("pow_f").innerHTML = "OFF";
+						document.getElementById("cur_f").innerHTML = "";
+						document.getElementById("tst_f").innerHTML = "";
+						document.getElementById("tem_f").innerHTML = temperature.toFixed(2) + "°C";
+						power = false;
+					}
+					/////simulation END
+
+				} 
+				else 
+				{
+					publish("*1" + setTemperature.toString());
+					/////simulation BEGIN
+					if(simul == 1)
+					{
+						power = true;
+						document.getElementById("pow_f").innerHTML = "ON";
+						document.getElementById("tem_f").innerHTML = temperature.toFixed(2) + "°C";
+						document.getElementById("cur_f").innerHTML = current.toFixed(2) + " A";
+						document.getElementById("tst_f").innerHTML = setTemperature + "°C";
+					}
+					/////simulation END
+				}
+			}
+		}
+		//Client connect event and subscribe automatically
+		function onConnect()
+		{
+			send_console("Connected to: " + broker_url);
+			mqtt_cli.subscribe(mqtt_topic);
+			send_console("subscribed to " + mqtt_topic); //Subscribe
+			connected = true; //Connect automatically after subscribing
+			document.getElementById("conn").innerHTML = "Connected.";
+		}
+
+		//Client connection loss event
+		function onConnectionLost (responseObject) 
+		{
+			if (responseObject.errorCode !== 0) {
+				send_console("Connection Lost. Error: " + responseObject.errorMessage);
+				send_console("Please refresh.");
+				connected = false;
+			}
+		}
+
+		//Message arrival event
+		function onMessageArrived(message)
+		{
+			var recvMessage = message.payloadString;
+			if (recvMessage[0] == '*' || recvMessage[mrecvMessage - 1] != '%')
+			{
+				;//ignore
+			} 
+			else 
+			{
+				unresponded -= 1;
+				//Format: power$temperature$set-temp$current$%
+				//";;" is corrected to "; ;" to be able to be split
+				//blank input: no space
+				recvMessage = recvMessage.replace(/;;/g, "; ;");
+				recvMessage = recvMessage.replace(/;;/g, "; ;");
+				bufferArray = recvMessage.split(";");
+				if (bufferArray[0] == "ON") 
+				{
+					document.getElementById("pow_f").innerHTML = bufferArray[0];
+					power = true;
+					
+					if (bufferArray[1].length > 1)
+					{
+						temperature = parseFloat(bufferArray[1]);
+						document.getElementById("tem_f").innerHTML = temperature.toFixed(2) + "°C";
+					}
+					if (bufferArray[2].length > 1)
+					{
+						//setTemperature = parseFloat(bufferArray[2]);
+						document.getElementById("tst_f").innerHTML = setTemperature + "°C";
+					}
+					if (bufferArray[3].length > 1)
+					{
+						current = parseFloat(bufferArray[3]);
+						document.getElementById("cur_f").innerHTML = current.toFixed(2) + " A";
+					}
+				} 
+				else if (bufferArray[0] == "OFF") 
+				{
+					document.getElementById("pow_f").innerHTML = bufferArray[0];
+					document.getElementById("cur_f").innerHTML = "";
+					document.getElementById("tst_f").innerHTML = "";
+					power = false;
+					if (bufferArray[1].length > 1)
+					{
+						temperature = parseFloat(bufferArray[1]);
+						document.getElementById("tem_f").innerHTML = temperature.toFixed(2) + "°C";
+					}
+				}
+			}
+		}
+
+		//Console message displayer
+		function send_console(text)
+		{
+			//A console for checking status
+			document.getElementById("console_").value += text + "\n";
+			document.getElementById("console_").scrollTop = document.getElementById("console_").scrollHeight;
+		}
+
+		function check_response()
+		{ //check every 5 secs
+			document.getElementById("diburgarh").innerHTML = unresponded;	
+			if (unresponded == 0)
+			{
+				document.getElementById("conn").innerHTML = "Connected";
+			} 
+			else 
+			{
+				document.getElementById("conn").innerHTML = "Network Unstable/Disconnected";
+			}
+		}
+	</script>
+</body>
+</html>

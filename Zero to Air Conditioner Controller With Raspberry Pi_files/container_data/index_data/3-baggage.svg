@@ -1,0 +1,7 @@
+<svg id="baggage" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+  <title>03-baggage</title>
+  <g>
+    <rect y="7.51" width="30" height="20.92" rx="3" ry="3" fill="#fff"/>
+    <path d="M19.11,1.57H10.89a2,2,0,0,0-2,2V5.34h1.8V4.1a.59.59,0,0,1,.59-.59h7.44a.59.59,0,0,1,.59.59V5.34h1.8V3.57A2,2,0,0,0,19.11,1.57Z" fill="#fff"/>
+  </g>
+</svg>
