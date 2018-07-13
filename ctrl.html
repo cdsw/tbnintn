@@ -253,12 +253,13 @@
 		function onMessageArrived(message)
 		{
 			var recvMessage = message.payloadString;
-			if (recvMessage[0] == '*' || recvMessage[mrecvMessage - 1] != '%')
+			if (recvMessage[0] == '*' || recvMessage[recvMessage.length - 1] != '%')
 			{
-				;//ignore
+				document.getElementById("diburgarh").innerHTML = recvMessage + recvMessage[recvMessage.length - 1];//ignore
 			} 
 			else 
 			{
+				document.getElementById("diburgarh").innerHTML = "1?";
 				unresponded -= 1;
 				//Format: power$temperature$set-temp$current$%
 				//";;" is corrected to "; ;" to be able to be split
