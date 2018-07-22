@@ -1,0 +1,16 @@
+hosting     -- 000webhost
+hosting acc -- umumlar5@gmail.com
+hosting pwd -- tbniot000
+
+server    -- tbniot.000webhostapp.com
+server pw -- tbniot000
+
+DB name -- id6526640_table1
+DB acc  -- tbniot
+DB pwd  -- tbniot000
+DB host -- localhost
+
+Table name -- LOG
+Table cols -- TIMESTAMP INT 
+              CURRENT FLOAT
+              TEMPERATURE FLOAT
