@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+
+	</head>
+	<body>
+		<span id="diburgarh">DBG</span>
+		<table>
+			<tr>
+				<td width = 300>
+					Power: <span id="s_pwr"></span>
+				</td>
+				<td>
+					<button onclick="toggle_power();">Power</button>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Current: <span id="s_cur"></span>
+				</td>
+				<td>
+					[Reserved]
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Temperature: <span id="s_tem"></span>
+				</td>
+				<td>
+					<button onclick="temp_up();">Temp Up</button>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Set Temp.: <span id="s_tst"></span>
+				</td>
+				<td>
+					<button onclick="temp_down();">Temp Down</button>
+				</td>
+			</tr>
+		</table>
+		<script>
+			var power = true;
+			var v_temp = 19.69;
+			var s_temp = 23;
+			var v_curr = 3.46;
+			function update_values()
+			{
+				if (power == true)
+				{
+					document.getElementById("s_pwr").innerHTML = "NON";
+					document.getElementById("s_cur").innerHTML = "0.00";
+					document.getElementById("s_tem").innerHTML = v_temp;
+					document.getElementById("s_tst").innerHTML = "00";					}
+				else
+				{
+					document.getElementById("s_pwr").innerHTML = "OUI";
+					document.getElementById("s_cur").innerHTML = v_curr;
+					document.getElementById("s_tem").innerHTML = v_temp;
+					document.getElementById("s_tst").innerHTML = s_temp;
+				}
+			
+			}
+			function toggle_power()
+			{
+				document.getElementById("diburgarh").innerHTML = "TOGGLE";
+				if (power == true)
+				{
+					power = false;
+				}
+				else
+				{
+					power = true;
+				}
+				update_values();
+
+				
+			}
+			function temp_up()
+			{
+				if (s_temp < 30)
+				{
+					document.getElementById("diburgarh").innerHTML = "UP";
+					s_temp += 1;
+					update_values();
+				}
+			}
+			function temp_down()
+			{
+				if (s_temp > 16)
+				{
+					document.getElementById("diburgarh").innerHTML = "DN";
+					s_temp -= 1;
+					update_values();
+				}
+			}
+
+
+		</script>
+	</body>
+</html>
